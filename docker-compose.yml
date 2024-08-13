@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - ./postgres_vol:/var/lib/postgresql/data
+
+  embedding_services:
+    image: michaelf34/infinity:latest
+    command: v2 --model-id=BAAI/bge-reranker-base --model-id=BAAI/bge-m3 --engine=torch --device=cuda --port=7997
+    ports:
+      - "7997:7997"
+    volumes:
+      - ./embed_models:/app/.cache
+    environment:
+      TRANSFORMERS_OFFLINE: 1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  llm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: llm
+    image: llm
+    env_file:
+      - .env
+    volumes:
+      - ./llm:/app/
+    networks:
+      - hello-dapr
+
+  webui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: webui
+    image: webui
+    env_file:
+      - .env
+    volumes:
+      - ./webui:/app/
+    networks:
+      - hello-dapr

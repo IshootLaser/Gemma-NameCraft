@@ -37,13 +37,19 @@ By using Gemma-NameCraft, you agree to these terms and conditions. If you do not
 
 Placeholder: A Youtube video showing how it works
 
-Self-host using docker compose: under the project root, run `docker compose up`. Although cuda-compatible GPU is recommended for better performance, it is not required.
+Self-host using docker compose: first, create a `.env` file as shown below. Under the project root, run `docker compose up`. Although cuda-compatible GPU is recommended for better performance, it is not required.
 
 Simplified function demonstration in Google Colab:
 
 [link placeholder](fake link)
 
 
+
+External Sources:
+
+* [caoxingyu/chinese-gushiwen: 中华古诗文数据库和API。包含10000首古文(诗、词、歌、赋以及其它形式的文言文)，近4000名作者，10000名句 (github.com)](https://github.com/caoxingyu/chinese-gushiwen)
+* [姓名测试打分生辰八字-起名字测试-测名字打分数算命-免费周易测算名字_起名网 (threetong.com)](https://www.threetong.com/ceming/baziceming/xingmingceshi.php)
+* [callmefeifei/baby-names (github.com)](https://github.com/callmefeifei/baby-names)
 
 ```
 Copyright © [2024] [Wei Zheng]. All rights reserved.
