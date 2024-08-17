@@ -6,3 +6,4 @@ pgvector==0.3.2
 SQLAlchemy==2.0.32
 python-dotenv==1.0.1
 lxml
+Flask==2.3.2

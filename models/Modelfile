@@ -1,0 +1,15 @@
+FROM "./Gemma-2-2b-Chinese-it-Q8_0-GGUF/gemma-2-2b-chinese-it-q8_0.gguf"
+TEMPLATE """{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 }}
+{{- if or (eq .Role "user") (eq .Role "system") }}<start_of_turn>user
+{{ .Content }}<end_of_turn>
+{{ if $last }}<start_of_turn>model
+{{ end }}
+{{- else if eq .Role "assistant" }}<start_of_turn>model
+{{ .Content }}{{ if not $last }}<end_of_turn>
+{{ end }}
+{{- end }}
+{{- end }}"""
+PARAMETER stop <start_of_turn>
+PARAMETER stop <end_of_turn>
+SYSTEM """你是一个中文对话机器人。你将主要用中文和用户交流。除非用户明确指示，请不要用除了中文以外的语言和用户聊天。"""

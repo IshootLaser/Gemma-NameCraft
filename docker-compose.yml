@@ -8,45 +8,72 @@ services:
     volumes:
       - ./postgres_vol:/var/lib/postgresql/data
 
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+
   embedding_services:
     image: michaelf34/infinity:latest
     command: v2 --model-id=BAAI/bge-reranker-base --model-id=BAAI/bge-m3 --engine=torch --device=cuda --port=7997
     ports:
       - "7997:7997"
     volumes:
-      - ./embed_models:/app/.cache
+      - ./models:/app/.cache
     environment:
       TRANSFORMERS_OFFLINE: 1
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [gpu]
+
+  ollama:
+    image: ollama/ollama
+    ports:
+        - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    entrypoint: ["ollama", "serve", ""]
+
+#  webui:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#      target: webui
+#    image: webui
+#    env_file:
+#      - .env
+
+#  jupyter:
+#    image: paligemma-jnb
+#    ports:
+#      - "8888:8888"
+#    volumes:
+#      - ./notebooks:/home/jovyan/work
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [ gpu ]
+
+  paligemma_server:
+    image: paligemma-server
+    ports:
+      - "5443:5000"
+    volumes:
+      - ./models/huggingface/hub/models--google--paligemma-3b-mix-224:/app/models/models--google--paligemma-3b-mix-224
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu]
+              capabilities: [ gpu ]
 
-  llm:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: llm
-    image: llm
-    env_file:
-      - .env
-    volumes:
-      - ./llm:/app/
-    networks:
-      - hello-dapr
-
-  webui:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: webui
-    image: webui
-    env_file:
-      - .env
-    volumes:
-      - ./webui:/app/
-    networks:
-      - hello-dapr
+volumes:
+  ollama:
