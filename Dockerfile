@@ -14,3 +14,21 @@ WORKDIR /app
 RUN mkdir models
 ENTRYPOINT python3 api.py
 
+FROM ollama/ollama as ollama-builder
+RUN mkdir app
+COPY ./models/Gemma-2-2b-Chinese-it-Q8_0-GGUF /app/Gemma-2-2b-Chinese-it-Q8_0-GGUF
+COPY ./models/Modelfile /app/Modelfile
+COPY ./models/build_ollama.sh /app/build_ollama.sh
+COPY ./models/run_gemma.sh /app/run_gemma.sh
+WORKDIR /app
+RUN chmod +x build_ollama.sh && ./build_ollama.sh
+RUN rm -rf Gemma-2-2b-Chinese-it-Q8_0-GGUF
+RUN cp -r ~/.ollama /tmp
+
+FROM ollama/ollama as ollama-gemma
+RUN mkdir app
+COPY ./models/run_gemma.sh /app/run_gemma.sh
+WORKDIR /app
+
+COPY --from=ollama-builder /tmp/.ollama /root/.ollama
+RUN chmod +x run_gemma.sh

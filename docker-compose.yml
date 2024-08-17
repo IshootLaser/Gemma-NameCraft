@@ -15,7 +15,7 @@ services:
 
   embedding_services:
     image: michaelf34/infinity:latest
-    command: v2 --model-id=BAAI/bge-reranker-base --model-id=BAAI/bge-m3 --engine=torch --device=cuda --port=7997
+    command: v2 --model-id=BAAI/bge-reranker-base --model-id=BAAI/bge-m3 --device=cpu --port=7997
     ports:
       - "7997:7997"
     volumes:
@@ -31,12 +31,16 @@ services:
 #              capabilities: [gpu]
 
   ollama:
-    image: ollama/ollama
+    image: ollama-gemma
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ollama-gemma
+    volumes:
+      - ./models/Gemma-2-2b-Chinese-it-Q8_0-GGUF:/app/Gemma-2-2b-Chinese-it-Q8_0-GGUF
     ports:
         - "11434:11434"
-    volumes:
-      - ollama:/root/.ollama
-    entrypoint: ["ollama", "serve", ""]
+    entrypoint: ["/bin/bash", "run_gemma.sh"]
 
 #  webui:
 #    build:
@@ -63,8 +67,12 @@ services:
 
   paligemma_server:
     image: paligemma-server
+    build:
+        context: .
+        dockerfile: Dockerfile
+        target: paligemma-server
     ports:
-      - "5443:5000"
+      - "5443:5023"
     volumes:
       - ./models/huggingface/hub/models--google--paligemma-3b-mix-224:/app/models/models--google--paligemma-3b-mix-224
     deploy:
@@ -74,6 +82,3 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [ gpu ]
-
-volumes:
-  ollama:
