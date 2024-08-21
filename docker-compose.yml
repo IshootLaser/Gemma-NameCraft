@@ -16,6 +16,7 @@ services:
   embedding_services:
     image: michaelf34/infinity:latest
     command: v2 --model-id=BAAI/bge-reranker-base --model-id=BAAI/bge-m3 --device=cpu --port=7997
+#    command: v2 --model-id=BAAI/bge-reranker-base --model-id=BAAI/bge-m3 --engine=torch --device=cuda --port=7997
     ports:
       - "7997:7997"
     volumes:
@@ -41,6 +42,13 @@ services:
     ports:
         - "11434:11434"
     entrypoint: ["/bin/bash", "run_gemma.sh"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
 
 #  webui:
 #    build:
@@ -51,19 +59,24 @@ services:
 #    env_file:
 #      - .env
 
-#  jupyter:
-#    image: paligemma-jnb
-#    ports:
-#      - "8888:8888"
-#    volumes:
-#      - ./notebooks:/home/jovyan/work
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: 1
-#              capabilities: [ gpu ]
+  jupyter:
+    image: paligemma-jnb
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: paligemma-jnb
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./models:/home/jovyan/work/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
 
   paligemma_server:
     image: paligemma-server
@@ -74,11 +87,12 @@ services:
     ports:
       - "5443:5023"
     volumes:
-      - ./models/huggingface/hub/models--google--paligemma-3b-mix-224:/app/models/models--google--paligemma-3b-mix-224
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
+      - ./models/huggingface/hub/models--google--paligemma-3b-mix-224:/app/models/paligemma
+      - ./utils/test_img.jpg:/app/test_img.jpg
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [ gpu ]

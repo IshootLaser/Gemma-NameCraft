@@ -164,6 +164,9 @@ cython_debug/
 # docker volumes
 postgres_vol/*
 models/Gemma-2-2b-Chinese-it-Q8_0-GGUF
+models/Gemma-2-2b-Chinese-it-GGUF
+models/paligemma*
 models/hub
 models/huggingface
 notebooks/*
+data/*
