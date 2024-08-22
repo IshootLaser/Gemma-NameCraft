@@ -59,36 +59,35 @@ services:
 #    env_file:
 #      - .env
 
-  jupyter:
-    image: paligemma-jnb
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: paligemma-jnb
-    ports:
-      - "8888:8888"
-    volumes:
-      - ./notebooks:/home/jovyan/work
-      - ./models:/home/jovyan/work/models
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
-
-  paligemma_server:
-    image: paligemma-server
-    build:
-        context: .
-        dockerfile: Dockerfile
-        target: paligemma-server
-    ports:
-      - "5443:5023"
-    volumes:
-      - ./models/huggingface/hub/models--google--paligemma-3b-mix-224:/app/models/paligemma
-      - ./utils/test_img.jpg:/app/test_img.jpg
+#  jupyter:
+#    image: paligemma-jnb
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#      target: paligemma-jnb
+#    ports:
+#      - "8888:8888"
+#    volumes:
+#      - ./notebooks:/home/jovyan/work
+#      - ./models:/home/jovyan/work/models
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [ gpu ]
+#
+#  paligemma_server:
+#    image: paligemma-server
+#    build:
+#        context: .
+#        dockerfile: Dockerfile
+#        target: paligemma-server
+#    ports:
+#      - "5443:5023"
+#    volumes:
+#      - ./utils/test_img.jpg:/app/test_img.jpg
 #    deploy:
 #      resources:
 #        reservations:

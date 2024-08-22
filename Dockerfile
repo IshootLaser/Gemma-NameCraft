@@ -9,7 +9,7 @@ CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--al
 
 FROM paligemma-base as paligemma-server
 RUN pip install Flask==2.3.2 pillow==10.4.0
-COPY ./models/paligemma /app/models/paligemma
+COPY ./models/paligemma_4bit /app/models/paligemma
 COPY ./paligemma_server /app
 WORKDIR /app
 ENTRYPOINT python3 api.py

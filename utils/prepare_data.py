@@ -120,6 +120,7 @@ def insert_helper(
                 embedding_batch = update_embedding(embedding_batch)
             except Exception as e:
                 print_exc()
+                embedding_batch = []
                 continue
             insert_batch += embedding_batch
             embedding_batch = []
@@ -128,6 +129,7 @@ def insert_helper(
                 bulk_insert(insert_batch)
             except Exception as e:
                 print_exc()
+                insert_batch = []
                 continue
             insert_batch = []
 
