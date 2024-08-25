@@ -60,7 +60,7 @@ services:
       - "8157:80"
     restart: always
     command:
-      sh -c "flutter pub get && flutter run -d web-server --web-renderer=auto --web-port 80 --web-hostname 0.0.0.0"
+      sh -c "flutter pub get && flutter run -d web-server --release --web-renderer=auto --web-port 80 --web-hostname 0.0.0.0"
     env_file:
       - .env
 
