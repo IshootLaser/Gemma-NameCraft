@@ -15,6 +15,7 @@ class ModelManager:
         self.model = None
         self.processor = AutoProcessor.from_pretrained(model_path)
         self.load_time = None
+        self.working = False
 
     def load(self):
         t1 = time()
@@ -29,14 +30,16 @@ class ModelManager:
         gc.collect()
         torch.cuda.empty_cache()
 
-    def predict(self, prompt, image, streamer):
+    def predict(self, prompt, image, max_tokens, sample, streamer):
+        self.working = True
         self.load()
         model_inputs = self.processor(
             text=prompt, images=image, return_tensors="pt"
         ).to(model_manager.model.device)
         with torch.no_grad():
-            self.model.generate(**model_inputs, max_new_tokens=100, do_sample=True, streamer=streamer)
+            self.model.generate(**model_inputs, max_new_tokens=max_tokens, do_sample=sample, streamer=streamer)
         self.unload()
+        self.working = False
 
     @staticmethod
     def get_streamer():

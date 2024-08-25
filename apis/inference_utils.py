@@ -34,29 +34,3 @@ def streaming(s):
     }
     chunk = f'data: {json.dumps(chunk)}\n\n'
     yield chunk
-
-
-async def streaming_async(s):
-    chunk = {
-        'payload': '',
-        'finished': False,
-        'last_load_time': model_manager.load_time
-    }
-    chunk = f'data: {json.dumps(chunk)}\n\n'
-    yield chunk
-    for i in s:
-        chunk = {
-            'payload': i,
-            'finished': False,
-            'last_load_time': model_manager.load_time
-        }
-        chunk = f'data: {json.dumps(chunk)}\n\n'
-        yield chunk
-        await asyncio.sleep(1)
-    chunk = {
-        'payload': '',
-        'finished': True,
-        'last_load_time': model_manager.load_time
-    }
-    chunk = f'data: {json.dumps(chunk)}\n\n'
-    yield chunk

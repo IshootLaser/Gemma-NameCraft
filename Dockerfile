@@ -12,9 +12,7 @@ RUN pip install fastapi[standard] pillow==10.4.0 Flask==3.0.3
 COPY ./models/paligemma_4bit /app/models/paligemma
 COPY ./apis/ /app
 WORKDIR /app
-ENV PYTHONPATH "${PYTHONPATH}:/app"
-ENTRYPOINT fastapi run paligemma_fastAPI.py --port 5023
-#ENTRYPOINT python3 paligemma_api.py
+ENTRYPOINT uvicorn paligemma_app:app --host 0.0.0.0 --port 5023 --workers 1
 
 FROM ollama/ollama as ollama-builder
 RUN mkdir app
@@ -33,3 +31,16 @@ WORKDIR /app
 
 COPY --from=ollama-builder /tmp/.ollama /root/.ollama
 RUN chmod +x run_gemma.sh
+
+FROM python:3.11.6 as backend
+RUN mkdir app
+COPY requirements.txt app/
+WORKDIR /app
+RUN pip install --prefer-binary -r requirements.txt
+
+COPY settings.py /
+COPY apis apis/
+COPY parsers parsers/
+COPY prompts prompts/
+COPY utils utils/
+ENTRYPOINT ["uvicorn", "apis.app:app", "--host", "0.0.0.0", "--port", "5017", "--workers", "1"]

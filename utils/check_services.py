@@ -5,11 +5,12 @@ from base64 import b64encode
 from PIL import Image
 from io import BytesIO
 import socket
+from pathlib import Path
 
-server_url = os.environ.get('SERVER_URL', '127.0.0.1')
-infinity_server = 'http://' + server_url + ':7997/health'
-gemma_server = 'http://' + server_url + ':11434/v1/chat/completions'
-paligemma_server = 'http://' + server_url + ':5443/generate'
+infinity_server = os.environ.get('INFINITY_SERVER', 'http://embedding_services:7997/health')
+gemma_server = os.environ.get('GEMMA_SERVER', 'http://ollama:11434/v1/chat/completions')
+paligemma_server = os.environ.get('PALIGEMMA_SERVER', 'http://paligemma:5023/health')
+postgres_host = os.environ.get('POSTGRES_HOST', 'postgres')
 gemma_test_payload = {
     "model": "gemma2-2b-Chinese",
     "stream": False,
@@ -25,13 +26,14 @@ gemma_test_payload = {
         }
     ]
 }
-image = Image.open('./test_img.jpg')
+image = Image.open(os.path.join(Path(__file__).parent.absolute(), 'test_img.jpg'))
 with BytesIO() as output:
     image.save(output, format='JPEG')
     image_b64 = b64encode(output.getvalue()).decode('utf-8')
 paligemma_test_payload = {
     'prompt': 'caption en',
-    'image': image_b64
+    'image': image_b64,
+    'max_tokens': 1
 }
 
 max_retry = 10
@@ -39,25 +41,50 @@ retry_interval = 60
 
 
 def check():
-    r = requests.get(infinity_server)
-    assert r.status_code == 200, f'Infinity server is not available at {infinity_server}'
+    service_ready = {
+        'infinity': False,
+        'gemma': False,
+        'paligemma': False,
+        'database': False
+    }
 
-    r = requests.post(gemma_server, json=gemma_test_payload)
-    assert r.status_code == 200, f'Gemma server is not available at {gemma_server}'
-
-    r = requests.post(paligemma_server, json=paligemma_test_payload)
-    assert r.status_code == 200, f'Paligemma server is not available at {paligemma_server}'
-
-    with socket.create_connection((server_url, 5432), timeout=5):
+    try:
+        r = requests.get(infinity_server)
+        if r.status_code == 200:
+            service_ready['infinity'] = True
+    except:
         pass
 
-
-for n in range(max_retry):
     try:
-        check()
-        print('All services are available.')
-        break
-    except Exception as e:
-        print(e)
-        sleep(retry_interval)
-        print(f'Number of retries remaining: {n}')
+        r = requests.post(gemma_server, json=gemma_test_payload)
+        if r.status_code == 200:
+            service_ready['gemma'] = True
+    except:
+        pass
+
+    try:
+        r = requests.get(paligemma_server)
+        if r.status_code == 200:
+            service_ready['paligemma'] = True
+    except:
+        pass
+
+    try:
+        with socket.create_connection((postgres_host, 5432), timeout=5):
+            service_ready['database'] = True
+    except:
+        pass
+
+    return service_ready
+
+
+if __name__ == '__main__':
+    for n in range(max_retry):
+        try:
+            for k, v in check().items():
+                if not v:
+                    raise Exception(f'{k} service not available.')
+        except Exception as e:
+            print(e)
+            sleep(retry_interval)
+            print(f'Number of retries remaining: {n}')
