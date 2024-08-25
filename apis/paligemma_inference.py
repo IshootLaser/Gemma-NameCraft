@@ -1,6 +1,6 @@
 import gc
 import os
-from time import time
+from time import time, sleep
 
 import torch
 from transformers import AutoProcessor, PaliGemmaForConditionalGeneration, TextIteratorStreamer
@@ -16,23 +16,31 @@ class ModelManager:
         self.processor = AutoProcessor.from_pretrained(model_path)
         self.load_time = None
         self.working = False
+        self.loading = False
 
     def load(self):
+        self.loading = True
         t1 = time()
         self.model = PaliGemmaForConditionalGeneration.from_pretrained(
             model_path, low_cpu_mem_usage=True, device_map='cuda:0'
         ).eval()
         t2 = time()
         self.load_time = round(t2 - t1, 3)
+        self.loading = False
 
     def unload(self):
         del self.model
         gc.collect()
         torch.cuda.empty_cache()
+        self.model = None
 
     def predict(self, prompt, image, max_tokens, sample, streamer):
         self.working = True
-        self.load()
+        if (model_manager.model is None) and not self.loading:
+            self.load()
+        else:
+            while self.loading:
+                sleep(0.001)
         model_inputs = self.processor(
             text=prompt, images=image, return_tensors="pt"
         ).to(model_manager.model.device)

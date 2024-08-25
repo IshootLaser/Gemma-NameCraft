@@ -41,6 +41,15 @@ def generate(vqa: VQA):
     return StreamingResponse(streaming(streamer), media_type='text/event-stream')
 
 
+@app.get('/preload')
+def preload():
+    if model_manager.model is None:
+        model_manager.load()
+        return Response('Model preloaded.', 200)
+    else:
+        return Response('Model is already loaded.', 200)
+
+
 @app.get('/health')
 def health():
     if model_manager.load_time is not None:
