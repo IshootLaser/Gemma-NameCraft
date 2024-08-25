@@ -7,11 +7,13 @@ services:
       - .env
     volumes:
       - ./postgres_vol:/var/lib/postgresql/data
+    restart: always
 
   adminer:
     image: adminer
     ports:
       - "8080:8080"
+    restart: always
 
   embedding_services:
     image: michaelf34/infinity:latest
@@ -30,6 +32,7 @@ services:
 #            - driver: nvidia
 #              count: 1
 #              capabilities: [gpu]
+    restart: always
 
   ollama:
     image: ollama-gemma
@@ -49,15 +52,17 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [ gpu ]
+    restart: always
 
-#  webui:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#      target: webui
-#    image: webui
-#    env_file:
-#      - .env
+  webui:
+    image: gemma-namecraft-ui
+    ports:
+      - "8157:80"
+    restart: always
+    command:
+      sh -c "flutter pub get && flutter run -d web-server --web-renderer=auto --web-port 80 --web-hostname 0.0.0.0"
+    env_file:
+      - .env
 
 #  jupyter:
 #    image: paligemma-jnb
@@ -78,20 +83,21 @@ services:
 #              count: 1
 #              capabilities: [ gpu ]
 #
-#  paligemma_server:
-#    image: paligemma-server
-#    build:
-#        context: .
-#        dockerfile: Dockerfile
-#        target: paligemma-server
-#    ports:
-#      - "5443:5023"
-#    volumes:
-#      - ./utils/test_img.jpg:/app/test_img.jpg
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: 1
-#              capabilities: [ gpu ]
+  paligemma:
+    image: paligemma-server
+    build:
+        context: .
+        dockerfile: Dockerfile
+        target: paligemma-server
+    ports:
+      - "5443:5023"
+    volumes:
+      - ./utils/test_img.jpg:/app/test_img.jpg
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    restart: always

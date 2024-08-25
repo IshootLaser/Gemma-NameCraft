@@ -8,11 +8,13 @@ EXPOSE 8888
 CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
 
 FROM paligemma-base as paligemma-server
-RUN pip install Flask==2.3.2 pillow==10.4.0
+RUN pip install fastapi[standard] pillow==10.4.0 Flask==3.0.3
 COPY ./models/paligemma_4bit /app/models/paligemma
-COPY ./paligemma_server /app
+COPY ./apis/ /app
 WORKDIR /app
-ENTRYPOINT python3 api.py
+ENV PYTHONPATH "${PYTHONPATH}:/app"
+ENTRYPOINT fastapi run paligemma_fastAPI.py --port 5023
+#ENTRYPOINT python3 paligemma_api.py
 
 FROM ollama/ollama as ollama-builder
 RUN mkdir app

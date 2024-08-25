@@ -29,7 +29,7 @@ def embed_from_infinity(
 
 def rerank_from_infinity(
         query: str, candidates: List[str], model: str = 'BAAI/bge-reranker-base', url: str = infinity_server
-):
+) -> List[float]:
     url += '/rerank'
     assert len(candidates) > 0, 'No candidates to rerank'
     payload = {

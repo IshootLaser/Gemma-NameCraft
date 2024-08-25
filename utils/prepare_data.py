@@ -30,6 +30,23 @@ poetry_files = [os.path.join(poetry_path, x) for x in os.listdir(poetry_path) if
 # prepare sentence
 sentence_path = os.path.join(data_save_dir, 'chinese-gushiwen/sentence')
 sentence_files = [os.path.join(sentence_path, x) for x in os.listdir(sentence_path) if x.endswith('.json')]
+# prepare words
+words_path = os.path.join(data_save_dir, 'chinese-xinhua/data/word.json')
+name_character_candidates_path = os.path.join(data_save_dir, 'common_words_in_name.json')
+
+
+def get_name_characters():
+    with open(name_character_candidates_path, 'r', encoding='utf-8') as f:
+        _ = json.load(f)
+    _name_characters = []
+    for v in _.values():
+        _name_characters += v
+    return set(_name_characters)
+
+
+name_characters = get_name_characters()
+# prepare idiom
+idiom_path = os.path.join(data_save_dir, 'chinese-xinhua/data/idiom.json')
 with db_manager.get_session() as session:
     uuid_list = session.query(Embeddings_bge_m3.uuid).all()
     uuid_set = {x[0] for x in uuid_list}
@@ -38,14 +55,12 @@ with db_manager.get_session() as session:
 def poetry_sentence_generator(path_list):
 
     def helper(n=10000):
-        counter = 0
         for file in path_list:
             with open(file, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
-                for line in lines:
+                for counter, line in enumerate(lines):
                     if counter >= n:
                         return
-                    counter += 1
                     yield json.loads(line)
 
     return helper
@@ -84,8 +99,47 @@ def sentence_prepare_callback(sentence):
     return {'raw_text': doc, 'uuid': md5_hash}
 
 
+def dictionary_generator(path):
+    with open(path, 'r', encoding='utf-8') as f:
+        words = json.load(f)
+    words = [x for x in words if set(x['word']).intersection(name_characters)]
+    word_count = len(words)
+    print('total words:', word_count)
+
+    def helper(n=2048):
+        for counter, word in enumerate(words):
+            if counter >= n:
+                return
+            yield word
+
+    return helper
+
+
+def word_prepare_callback(word):
+    for k in ('word', 'explanation', 'strokes', 'more'):
+        assert k in word, 'word format error'
+    doc = (
+        f'在新华字典里，字{word["word"]}的解释是: {word["explanation"]}\n'
+        f'这个字的笔画数是: {word["strokes"]}\n'
+        '' if word['more'].startswith('搜索') else f'关于这个字，还有更多的信息: {word["more"]}\n'
+    )
+    return {'raw_text': doc}
+
+
+def idiom_prepare_callback(idiom):
+    for k in ('derivation', 'example', 'explanation', 'word'):
+        assert k in idiom, 'idiom format error'
+    doc = (
+        f'中国有一句古代流传下来的成语/短语 {idiom["word"]}。它的起源是 {idiom["derivation"]}。\n'
+        f'它的意思是：{idiom["explanation"]}。\n'
+        f'它曾被用在这个文献里：{idiom["example"]}\n'
+    )
+    return {'raw_text': doc}
+
+
 def insert_helper(
-        content_generator, content_prepare_callback, embedding_batch_size=4, insert_batch_size=32, text_samples=128
+        content_generator, content_prepare_callback, embedding_batch_size=4, insert_batch_size=32, text_samples=128,
+        desc='processing ancient text'
 ):
 
     def update_embedding(_embedding_batch):
@@ -103,13 +157,15 @@ def insert_helper(
 
     embedding_batch = []
     insert_batch = []
-    for content in tqdm(content_generator(text_samples), desc='processing ancient text', total=text_samples):
+    for content in tqdm(content_generator(text_samples), desc=desc, total=text_samples):
         uuid = hashlib.md5(str(content).encode()).hexdigest()
         if uuid in uuid_set:
             continue
         try:
             item = content_prepare_callback(content)
             item['uuid'] = uuid
+            if len(item['raw_text']) > 2014:
+                continue
         except Exception as e:
             print_exc()
             continue
@@ -143,8 +199,19 @@ def insert_helper(
 
 
 if __name__ == '__main__':
-    insert_helper(poetry_sentence_generator(poetry_files), poetry_prepare_callback, text_samples=10000)
-    insert_helper(poetry_sentence_generator(sentence_files), sentence_prepare_callback, text_samples=10000)
+    insert_helper(
+        poetry_sentence_generator(poetry_files), poetry_prepare_callback, text_samples=10000, desc='processing poetry'
+    )
+    insert_helper(
+        poetry_sentence_generator(sentence_files), sentence_prepare_callback, text_samples=10000,
+        desc='processing sentence'
+    )
+    insert_helper(
+        dictionary_generator(words_path), word_prepare_callback, text_samples=2324, desc='processing words'
+    )
+    insert_helper(
+        dictionary_generator(idiom_path), idiom_prepare_callback, text_samples=28744, desc='processing idioms'
+    )
     # run a test
     from sqlalchemy import select
     test_str = '李白写过哪些关于月亮和喝酒的诗句？'
