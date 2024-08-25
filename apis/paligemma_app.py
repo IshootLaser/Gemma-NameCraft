@@ -43,7 +43,7 @@ def generate(vqa: VQA):
 
 @app.get('/preload')
 def preload():
-    if model_manager.model is None:
+    if (model_manager.model is None) and not model_manager.loading:
         model_manager.load()
         return Response('Model preloaded.', 200)
     else:
