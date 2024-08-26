@@ -2,6 +2,7 @@ from settings import name_eval_url, logger
 import logging
 from bs4 import BeautifulSoup
 import requests
+from collections import OrderedDict
 
 
 def get_hour(hour: int):
@@ -64,7 +65,7 @@ def prepare_payload(
 
 
 def get_name_eval(payload: dict):
-    eval_result = {}
+    eval_result = OrderedDict()
     try:
         r = requests.post(name_eval_url, data=payload)
         if r.status_code != 200:
