@@ -110,6 +110,9 @@ def get_name_eval(payload: dict):
             _ = li.text
             eval_result[_[:3]] = _
         eval_result['zong_ge'] = chart.find('li', class_='geshu').text
+        for k, v in eval_result.items():
+            if isinstance(v, str):
+                eval_result[k] = v.strip()
     except Exception as e:
         msg = f'Failed to get name evaluation result from {name_eval_url}. Error: {e}'
         logger.log(logging.ERROR, msg)

@@ -73,10 +73,10 @@ index = Index(
 )
 
 db_manager.recreate_all()
-with db_manager.get_connection() as conn:
-    result = conn.execute(text("SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'public'"))
-    result = [(x[0], x[1]) for x in result]
-    if (Embeddings_bge_m3.__tablename__, index_name) not in result:
+with db_manager.get_connection() as _conn:
+    _result = _conn.execute(text("SELECT tablename, indexname FROM pg_indexes WHERE schemaname = 'public'"))
+    _result = [(x[0], x[1]) for x in _result]
+    if (Embeddings_bge_m3.__tablename__, index_name) not in _result:
         index.create(db_manager.engine)
 # some test
 # item1 = Embeddings_bge_m3(embedding=[1, 2, 3])
