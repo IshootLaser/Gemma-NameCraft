@@ -14,6 +14,6 @@ def vector_search(_input: str, limit=32, rerank=False, rerank_limit=None):
     if not rerank:
         return [x.raw_text for x in result]
     rerank_score = rerank_from_infinity(_input, [x.raw_text for x in result])
-    pair = ((a, b) for (a, b) in zip([x.text for x in result], rerank_score))
+    pair = ((a, b) for (a, b) in zip([x.raw_text for x in result], rerank_score))
     reranked = sorted(pair, key=lambda x: x[1], reverse=True)[:rerank_limit]
     return [x[0] for x in reranked]

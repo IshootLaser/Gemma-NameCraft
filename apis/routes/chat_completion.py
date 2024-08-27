@@ -50,7 +50,7 @@ class Chat(BaseModel):
     max_tokens: int = 1024
     messages: List[Dict[str, str]]
     options: Dict[str, Any] = {}
-    injected_payload: Any = None
+    injected_payload: Any = {}
 
 
 class ChatForJson(Chat):
@@ -63,12 +63,24 @@ class ChatForJson(Chat):
 # region helper functions
 def get_reference(prompt, template):
     search_text = template.render({'requirement': prompt})
-    results = vector_search(search_text, rerank_limit=3)
+    results = vector_search(search_text, 6, True, rerank_limit=2)
     return '\n'.join(results)
 
 
 def name_eval(t: ChatForJson):
-    name_eval_inputs = dict_to_sorted_dict(find_eval_input(t))
+    try:
+        name_eval_inputs = dict_to_sorted_dict(find_eval_input(t))
+    except:
+        new_sys_msg = (
+            f'用户输入的聊天信息是：\n{t.messages[-1]["content"]}\n'
+            '用户似乎想请南瓜道士用生辰八字判断一个名字的好坏，但没有提供相对应的信息。\n'
+            '但是南瓜道士需要用户提供完整的生辰八字信息。\n'
+            '请友好地向用户索取缺失信息，但不要引开话题。'
+        )
+        t = conversation_injection(t, new_sys_msg)
+        payload = t.model_dump(exclude={'injected_payload'})
+        return respond_helper(chat_url, payload, t.stream)
+    print(f'name eval input: {name_eval_inputs}')
     variable_map = {
         '_last_name': '姓氏',
         '_first_name': '名字',
@@ -79,7 +91,7 @@ def name_eval(t: ChatForJson):
         '_minute': '出生分钟',
         '_province': '省份',
         '_city': '城市',
-        'is boy': '性别'
+        'is_boy': '性别'
     }
     can_eval = True
     missing_info = []
@@ -89,11 +101,12 @@ def name_eval(t: ChatForJson):
             missing_info.append(variable_map[k])
     if not can_eval:
         new_sys_msg = (
+            f'用户输入的聊天信息是：\n{t.messages[-1]["content"]}\n'
             f'用户似乎想要请南瓜道士帮忙评价名字，但是输入的信息不全。南瓜道士还需要以下信息：\n'
             f'{", ".join(missing_info)}\n'
             '请友好地向用户索取缺失信息，但不要引开话题。'
         )
-        t = conversation_injection(t, new_sys_msg, 'user')
+        t = conversation_injection(t, new_sys_msg)
         payload = t.model_dump(exclude={'injected_payload'})
         return respond_helper(chat_url, payload, t.stream)
     hash_obj = sha256(json.dumps(name_eval_inputs).encode()).hexdigest()
@@ -127,6 +140,7 @@ def name_eval(t: ChatForJson):
         'bazi_score': name_eval_results['bazi_score'],
         'name_score': name_eval_results['name_score']
     }
+    print(f'name eval context: {context}')
     prompt = name_eval_template.render(context)
     t = conversation_injection(t, prompt)
     payload = t.model_dump(exclude={'injected_payload'})
@@ -139,6 +153,7 @@ def identify_intent(prompt: str) -> int:
     rerank_scores = rerank_from_infinity(prompt, available_intents)
     intent_ix = find_argmax(rerank_scores)
     intent_id = intents[intent_ix]['id']
+    print(f'identified intent: {available_intents[intent_ix]}')
     return intent_id
 
 
@@ -158,12 +173,8 @@ def respond_helper(url, payload, use_stream=False):
         return JSONResponse(r.json())
 
 
-def conversation_injection(t: Chat, prompt: str, role='system'):
-    for i in t.messages[::-1]:
-        if i['role'] != role:
-            continue
-        i['content'] = prompt
-        break
+def conversation_injection(t: Chat, prompt: str):
+    t.messages[-1]['content'] = prompt
     return t
 
 
@@ -213,12 +224,8 @@ def chat_for_json(payload, json_template):
 
 
 def find_eval_input(t: ChatForJson):
-    prompt = find_eval_input_template.render()
-    for i in t.messages[::-1]:
-        if i['role'] != 'system':
-            continue
-        i['content'] = prompt
-        break
+    prompt = find_eval_input_template.render({'user_input': t.messages[-1]['content']})
+    t.messages[-1]['content'] = prompt
     payload = t.model_dump(exclude={'injected_payload'})
     payload['stream'] = True
 
@@ -267,12 +274,19 @@ def name_eval_wrapper(t: ChatForJson):
 @router.post('chat/main')
 def chat_main(t: ChatForJson):
     prompt = t.messages[-1]['content']
-    intent = identify_intent(prompt)
-    context = {
-        'poetry': get_reference(prompt, poetry_template) if intent == 0 else '',
-        'culture': get_reference(prompt, cultural_template) if intent == 3 else '',
-        'image': t.injected_payload.get('transcription', '')
-    }
+    if prompt.__contains__('<imageCaption>'):
+        intent = -1
+        caption, prompt = prompt.split('<imageCaption>')
+        context = {'poetry': '', 'culture': '', 'image': caption, 'user_input': prompt}
+    else:
+        intent = identify_intent(prompt)
+        context = {
+            'poetry': get_reference(prompt, poetry_template) if intent == 0 else '',
+            'culture': get_reference(prompt, cultural_template) if intent == 3 else '',
+            'image': '',
+            'user_input': prompt
+        }
+    print(f'prepared_context: {context}')
     new_prompt = host_template.render(context)
     if intent == 1:
         return name_eval(t)
