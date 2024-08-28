@@ -96,11 +96,19 @@ def name_eval(t: ChatForJson):
     }
     can_eval = True
     missing_info = []
+    for k, v in variable_map.items():
+        if k not in name_eval_inputs:
+            can_eval = False
+            break
     for k, v in name_eval_inputs.items():
+        if k not in variable_map:
+            can_eval = False
+            break
         if (v is None) or (v == ''):
             can_eval = False
             missing_info.append(variable_map[k])
     if not can_eval:
+        print('invalid name eval input!')
         new_sys_msg = (
             f'用户输入的聊天信息是：\n{user_prompt}\n'
             f'用户似乎想要请南瓜道士帮忙评价名字，但是输入的信息不全。南瓜道士还需要以下信息：\n'
@@ -143,6 +151,7 @@ def name_eval(t: ChatForJson):
             'name_score': name_eval_results['name_score']
         }
     except:
+        print('invalid name eval result!')
         new_sys_msg = (
             f'用户输入的聊天信息是：\n{user_prompt}\n'
             f'用户似乎想要请南瓜道士帮忙评价名字，但是输入的信息无法计算。南瓜道士还需要以下信息：\n'
@@ -166,7 +175,7 @@ def identify_intent(prompt: str) -> int:
     print(rerank_scores)
     intent_ix = find_argmax(rerank_scores)
     # give some extra weight to the conversation host
-    if rerank_scores[intent_ix] < 0.4:
+    if rerank_scores[intent_ix] < 0.1:
         intent_ix = 2
     intent_id = intents[intent_ix]['id']
     print(f'identified intent: {available_intents[intent_ix]}')
@@ -271,8 +280,7 @@ def transcribe(t: Generate):
     prompt = vqa_template.render({'transcription': t.prompt})
     payload = {
         'prompt': prompt,
-        'model': 'gemma2-2b-Chinese',
-        'sample': True
+        'model': 'gemma2-2b-Chinese'
     }
 
     return respond_helper(generate_url, payload, t.stream)

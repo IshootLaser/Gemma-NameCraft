@@ -37,11 +37,22 @@ By using Gemma-NameCraft, you agree to these terms and conditions. If you do not
 
 Placeholder: A Youtube video showing how it works
 
-Self-host using docker compose: first, create a `.env` file as shown below. Under the project root, run `docker compose up`. Although cuda-compatible GPU is recommended for better performance, it is not required.
+Self-host using docker compose: first, create a `.env` file as shown below. 
 
-Simplified function demonstration in Google Colab:
+```
+POSTGRES_USER=<usr>
+POSTGRES_PASSWORD=<pwd>
+ollama_url=ollama:11434
+backend_url=backend:5017
+apis=apis:5023
+healthEndPoint=http://backend:5017/health
+host=postgres
+paligemma_url=paligemma:5023
+```
 
-[link placeholder](fake link)
+To use the flutter web app, go to [IshootLaser/Gemma-NameCraft-UI (github.com)](https://github.com/IshootLaser/Gemma-NameCraft-UI) and build the web app from there with `docker compose build`.
+
+Under the project root, run `docker compose up`. Although cuda-compatible GPU is recommended for better performance, it is not required.
 
 
 
