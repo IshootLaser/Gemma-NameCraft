@@ -109,6 +109,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: backend
+    env_file:
+      - .env
     ports:
       - "5418:5017"
     restart: always

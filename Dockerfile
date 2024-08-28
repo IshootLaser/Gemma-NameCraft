@@ -38,7 +38,7 @@ COPY requirements.txt app/
 WORKDIR /app
 RUN pip install --prefer-binary -r requirements.txt
 
-COPY settings.py /
+COPY settings.py /app/settings.py
 COPY apis apis/
 COPY parsers parsers/
 COPY prompts prompts/

@@ -20,7 +20,7 @@
   {
     "id": 3,
     "intent": "名字里的期许",
-    "intent_desc": "你熟悉中文单字、词语字词",
+    "intent_desc": "你熟悉中文单字、词语、字词。你用你熟悉的这些知识取名字。",
     "tool": "get_dictionary_reference"
   }
 ]

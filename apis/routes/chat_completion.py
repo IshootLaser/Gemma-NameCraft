@@ -68,11 +68,12 @@ def get_reference(prompt, template):
 
 
 def name_eval(t: ChatForJson):
+    user_prompt = t.messages[-1]['content']
     try:
         name_eval_inputs = dict_to_sorted_dict(find_eval_input(t))
     except:
         new_sys_msg = (
-            f'用户输入的聊天信息是：\n{t.messages[-1]["content"]}\n'
+            f'用户输入的聊天信息是：\n{user_prompt}\n'
             '用户似乎想请南瓜道士用生辰八字判断一个名字的好坏，但没有提供相对应的信息。\n'
             '但是南瓜道士需要用户提供完整的生辰八字信息。\n'
             '请友好地向用户索取缺失信息，但不要引开话题。'
@@ -96,12 +97,12 @@ def name_eval(t: ChatForJson):
     can_eval = True
     missing_info = []
     for k, v in name_eval_inputs.items():
-        if v is None:
+        if (v is None) or (v == ''):
             can_eval = False
             missing_info.append(variable_map[k])
     if not can_eval:
         new_sys_msg = (
-            f'用户输入的聊天信息是：\n{t.messages[-1]["content"]}\n'
+            f'用户输入的聊天信息是：\n{user_prompt}\n'
             f'用户似乎想要请南瓜道士帮忙评价名字，但是输入的信息不全。南瓜道士还需要以下信息：\n'
             f'{", ".join(missing_info)}\n'
             '请友好地向用户索取缺失信息，但不要引开话题。'
@@ -116,30 +117,41 @@ def name_eval(t: ChatForJson):
         name_eval_results_cache[hash_obj] = name_eval_results
     else:
         name_eval_results = name_eval_results_cache[hash_obj]
-    context = {
-        'name': name_eval_results['命主姓名'],
-        'year': name_eval_inputs['_year'],
-        'month': name_eval_inputs['_month'],
-        'day': name_eval_inputs['_day'],
-        'hour': name_eval_inputs['_hour'],
-        'minute': name_eval_inputs['_minute'],
-        'province': name_eval_inputs['_province'],
-        'city': name_eval_inputs['_city'],
-        'sex': '男' if name_eval_inputs['is_boy'] else '女',
-        'success': name_eval_results['cheng_gong_yun'],
-        'fundamental': name_eval_results['ji_chu_yun'],
-        'personal_trait': name_eval_results['personal_trait'],
-        'social_trait': name_eval_results['she_jiao_yun'],
-        'wuxing': name_eval_results['wuxing'],
-        'zong_ge': name_eval_results['zong_ge'][-1],
-        'ren_ge': name_eval_results['人格→'][-1],
-        'di_ge': name_eval_results['地格→'][-1],
-        'wai_ge': name_eval_results['外格→'][-1],
-        'tian_ge': name_eval_results['天格→'][-1],
-        'lunar': name_eval_results['出生农历'][-1],
-        'bazi_score': name_eval_results['bazi_score'],
-        'name_score': name_eval_results['name_score']
-    }
+    try:
+        context = {
+            'name': name_eval_results['命主姓名'],
+            'year': name_eval_inputs['_year'],
+            'month': name_eval_inputs['_month'],
+            'day': name_eval_inputs['_day'],
+            'hour': name_eval_inputs['_hour'],
+            'minute': name_eval_inputs['_minute'],
+            'province': name_eval_inputs['_province'],
+            'city': name_eval_inputs['_city'],
+            'sex': '男' if name_eval_inputs['is_boy'] else '女',
+            'success': name_eval_results['cheng_gong_yun'],
+            'fundamental': name_eval_results['ji_chu_yun'],
+            'personal_trait': name_eval_results['personal_trait'],
+            'social_trait': name_eval_results['she_jiao_yun'],
+            'wuxing': name_eval_results['wuxing'],
+            'zong_ge': name_eval_results['zong_ge'][-1],
+            'ren_ge': name_eval_results['人格→'][-1],
+            'di_ge': name_eval_results['地格→'][-1],
+            'wai_ge': name_eval_results['外格→'][-1],
+            'tian_ge': name_eval_results['天格→'][-1],
+            'lunar': name_eval_results['出生农历'][-1],
+            'bazi_score': name_eval_results['bazi_score'],
+            'name_score': name_eval_results['name_score']
+        }
+    except:
+        new_sys_msg = (
+            f'用户输入的聊天信息是：\n{user_prompt}\n'
+            f'用户似乎想要请南瓜道士帮忙评价名字，但是输入的信息无法计算。南瓜道士还需要以下信息：\n'
+            f'名字，出生年月日，几点几分，出生省市，性别。\n'
+            '请友好地向用户索取缺失信息，但不要引开话题。'
+        )
+        t = conversation_injection(t, new_sys_msg)
+        payload = t.model_dump(exclude={'injected_payload'})
+        return respond_helper(chat_url, payload, t.stream)
     print(f'name eval context: {context}')
     prompt = name_eval_template.render(context)
     t = conversation_injection(t, prompt)
@@ -151,7 +163,11 @@ def name_eval(t: ChatForJson):
 def identify_intent(prompt: str) -> int:
     available_intents = [x['intent_desc'] for x in intents]
     rerank_scores = rerank_from_infinity(prompt, available_intents)
+    print(rerank_scores)
     intent_ix = find_argmax(rerank_scores)
+    # give some extra weight to the conversation host
+    if rerank_scores[intent_ix] < 0.4:
+        intent_ix = 2
     intent_id = intents[intent_ix]['id']
     print(f'identified intent: {available_intents[intent_ix]}')
     return intent_id
@@ -255,7 +271,8 @@ def transcribe(t: Generate):
     prompt = vqa_template.render({'transcription': t.prompt})
     payload = {
         'prompt': prompt,
-        'model': 'gemma2-2b-Chinese'
+        'model': 'gemma2-2b-Chinese',
+        'sample': True
     }
 
     return respond_helper(generate_url, payload, t.stream)
