@@ -26,6 +26,13 @@ class VQA(BaseModel):
     sample: bool = False
 
 
+def streaming_wrapper(func, thread, *args, **kwargs):
+    for i in func(*args, **kwargs):
+        yield i
+    thread.join()
+    yield ''
+
+
 @app.post('/generate')
 def generate(vqa: VQA):
     if model_manager.working:
@@ -38,7 +45,7 @@ def generate(vqa: VQA):
     )
 
     t.start()
-    return StreamingResponse(streaming(streamer), media_type='text/event-stream')
+    return StreamingResponse(streaming_wrapper(streaming, t, streamer), media_type='text/event-stream')
 
 
 @app.get('/preload')
