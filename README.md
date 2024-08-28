@@ -35,6 +35,8 @@ By using Gemma-NameCraft, you agree to these terms and conditions. If you do not
 
 ## How to run?
 
+Video demo:
+
 [![Alt text](https://img.youtube.com/vi/B4eiy7jpdyk/0.jpg)](https://www.youtube.com/watch?v=B4eiy7jpdyk)
 
 Self-host using docker compose: first, create a `.env` file as shown below. 
