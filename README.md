@@ -52,9 +52,29 @@ host=postgres
 paligemma_url=paligemma:5023
 ```
 
-To use the flutter web app, go to [IshootLaser/Gemma-NameCraft-UI (github.com)](https://github.com/IshootLaser/Gemma-NameCraft-UI) and build the web app from there with `docker compose build`.
+To use the flutter web app, go to [IshootLaser/Gemma-NameCraft-UI (github.com)](https://github.com/IshootLaser/Gemma-NameCraft-UI) and build the web app from there with `docker compose build`. Then use the web UI with `docker-compose.yml` in this project.
 
-Under the project root, run `docker compose up`. Although cuda-compatible GPU is recommended for better performance, it is not required.
+You can use any variant of Gemma2 GGUF model that had been finetuned on Chinese corpus. I used this [variant](https://huggingface.co/QuantFactory/Gemma-2-2b-Chinese-it-GGUF/tree/main). The Gemma2 GGUF weight, Paligemma `transformers` model (3b-mix), BAAI-bge-m3 and BAAI-bge-reranker-base should be downloaded to `/models` folder:
+
+```
+-models
+  |-Gemma-2-2b-Chinese-it-GGUF
+    |-Gemma-2-2b-Chinese-it.Q4_0.gguf
+  |-huggingface
+    |-.infinity_cache
+    |-hub
+      |-models--BAAI-bge-m3
+      |-models--BAAI-bge-reranker-base
+      |-models--google--paligemma-3b-mix
+```
+
+You can also modify the docker compose to point model source folder to other locations (i.e. the default hugging face cache.)
+
+Paligemma quantization and serialization process is demonstrated in `notebooks/qt_load_predict.ipynb` .
+
+Under the project root, run `docker compose up`. Although CUDA-compatible GPU is recommended for better performance, it is not required.
+
+To use RAG in the app, it is necessary to write data into the PostgreSQL DB by running `utils/prepare_data.py`. This script will automatically download, vectorize, and store text references.
 
 
 
