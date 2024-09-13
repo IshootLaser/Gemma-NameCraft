@@ -21,17 +21,7 @@ The chatbot can help new parents with these features:
    1. Evaluate the meaningfulness of each name
    2. Evaluate the wuxing or bazi of each name
 
-**Disclaimer:** 
 
-This is a project for showcasing Gemma's ability to create culturally sensitive contents. Gemma-NameCraft is provided for informational purposes only and is not intended to be a substitute for professional advice or judgment. The use of Gemma-NameCraft is at your own risk, and you are solely responsible for any consequences arising from the use of this tool.
-
-By using Gemma-NameCraft, you agree to indemnify and hold harmless Gemma-NameCraft and its officers, directors, employees, and agents from any and all claims, damages, liabilities, costs, and expenses (including attorneys' fees) arising from or related to your use of Gemma-NameCraft.
-
-Gemma-NameCraft is provided "as is" without warranty of any kind, either express or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. Gemma-NameCraft does not warrant that Gemma-NameCraft will meet your requirements or that it will be error-free, uninterrupted, or free from viruses or other harmful components.
-
-In using Gemma-NameCraft, you acknowledge and agree that Gemma-NameCraft shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from or related to your use of Gemma-NameCraft, including, but not limited to, damages for loss of profits, goodwill, use, data, or other intangible losses.
-
-By using Gemma-NameCraft, you agree to these terms and conditions. If you do not agree to these terms and conditions, you should not use Gemma-NameCraft.
 
 ## How to run?
 
@@ -83,6 +73,18 @@ External Sources:
 * [caoxingyu/chinese-gushiwen: 中华古诗文数据库和API。包含10000首古文(诗、词、歌、赋以及其它形式的文言文)，近4000名作者，10000名句 (github.com)](https://github.com/caoxingyu/chinese-gushiwen)
 * [姓名测试打分生辰八字-起名字测试-测名字打分数算命-免费周易测算名字_起名网 (threetong.com)](https://www.threetong.com/ceming/baziceming/xingmingceshi.php)
 * [callmefeifei/baby-names (github.com)](https://github.com/callmefeifei/baby-names)
+
+**Disclaimer:** 
+
+This is a project for showcasing Gemma's ability to create culturally sensitive contents. Gemma-NameCraft is provided for informational purposes only and is not intended to be a substitute for professional advice or judgment. The use of Gemma-NameCraft is at your own risk, and you are solely responsible for any consequences arising from the use of this tool.
+
+By using Gemma-NameCraft, you agree to indemnify and hold harmless Gemma-NameCraft and its officers, directors, employees, and agents from any and all claims, damages, liabilities, costs, and expenses (including attorneys' fees) arising from or related to your use of Gemma-NameCraft.
+
+Gemma-NameCraft is provided "as is" without warranty of any kind, either express or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. Gemma-NameCraft does not warrant that Gemma-NameCraft will meet your requirements or that it will be error-free, uninterrupted, or free from viruses or other harmful components.
+
+In using Gemma-NameCraft, you acknowledge and agree that Gemma-NameCraft shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from or related to your use of Gemma-NameCraft, including, but not limited to, damages for loss of profits, goodwill, use, data, or other intangible losses.
+
+By using Gemma-NameCraft, you agree to these terms and conditions. If you do not agree to these terms and conditions, you should not use Gemma-NameCraft.
 
 ```
 Copyright © [2024] [Wei Zheng]. All rights reserved.
